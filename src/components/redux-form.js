@@ -10,28 +10,58 @@ export class ReduxForm extends Component {
   constructor(props) {
     super(props);
     const { formName } = this.props;
+    const form = this.props.forms[formName];
     this.state = {
-      form: this.props.forms[formName],
-      onChange: updateField(formName),
-      onClick: checkErrors(formName)
+      form: (form === undefined ? {} : form),
+      fieldChange: updateField(formName),
+      buttonClick: checkErrors(formName),
+    }
+    this.fieldNames = [];
+  }
+
+  cloneChild(child) {
+    const { form, fieldChange, buttonClick } = this.state;
+    const { type, name } = child.props;
+    let fieldNames = this.fieldNames;
+    switch (type.toLowerCase()) {
+      case 'text':
+        if (fieldNames.indexOf(name) === -1) fieldNames.push(name);
+        const field = form[name];
+        const value = (field ? field.value : "");
+        const error = (field ? field.error : "");
+        const onChange = (x, y) => dispatch(fieldChange(x, y));
+        return React.cloneElement(child, { field, value, error, onChange, key: Math.random().toString(36) });
+      case 'button':
+        const onClick = () => dispatch(buttonClick(fieldNames));
+        return React.cloneElement(child, { onClick, key: Math.random().toString(36) });
+      default:
+        return child;
+
     }
   }
 
   render() {
-    const { dispatch } = this.props;
+    const { dispatch, children } = this.props;
     const { onChange, onClick } = this.state;
-    let form =  this.state.form;
-    if (form === undefined) form = {};
+    console.log(children);
+    let newChildren = _.map(children, function(child) {
+      if (child.props.type.toLowerCase() === 'text') {
+        return this.cloneChild(child);
+      } else {
+        return child;
+      }
+    }, this);
+    newChildren = _.map(children, function(child) {
+      if (child.props.type.toLowerCase() === 'button') {
+        return this.cloneChild(child);
+      } else {
+        return child;
+      }
+    }, this);
+
     return (
       <div>
-      { _.map(this.props.children, function(child) {
-          const field = form[child.props.name];
-          const value = (field ? field.value : "");
-          const error = (field ? field.error : "");
-          const onChange = (x, y) => dispatch(onChange(x, y));
-          return React.cloneElement(child, {field, value, onChange});
-        })
-      }
+        { newChildren }
       </div>
     );
   }

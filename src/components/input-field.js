@@ -8,6 +8,7 @@ export default class InputField extends Component {
   render() {
     console.log(this.props);
     const { name, value, onChange } = this.props;
+    console.log(onChange);
     return (
       <div>
         <input value={value} onChange={(e) => onChange(name, e.target.value)} />
@@ -15,3 +16,5 @@ export default class InputField extends Component {
     );
   }
 }
+
+InputField.defaultProps = { type: "text" };
